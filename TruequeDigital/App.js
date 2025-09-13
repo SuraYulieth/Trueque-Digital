@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
-import Principal from './src/Components/Principal';
-import LoginUsuario from './src/Components/LoginUsuario'; 
-import RegistroUsuario from './src/Components/RegistroUsuario';
-import Home from './src/Components/Home';
+import Principal from './src/Pantallas/Principal';
+import LoginUsuario from './src/Pantallas/LoginUsuario'; 
+import RegistroUsuario from './src/Pantallas/RegistroUsuario';
+import Home from './src/Pantallas/Home';
 import { NavigationContainer } from '@react-navigation/native'; 
 import { createStackNavigator } from '@react-navigation/stack'; 
 
