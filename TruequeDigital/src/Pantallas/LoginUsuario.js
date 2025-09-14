@@ -1,46 +1,46 @@
-import React, {useState} from "react";
-import { View, TextInput, Text, Button } from "react-native"
-import { auth } from '../../firebaseConfig';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+// src/Pantallas/LoginUsuario.js
+import React, { useState } from "react";
+import { View, Text, TextInput, Button, Alert, TouchableOpacity } from "react-native";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../firebaseConfig";
 
-export default function LoginUsuarios({ navigation }) {
-    
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+export default function LoginUsuario({ navigation }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-    const handleSignIn = async () => {
-
-        try {
-            const { user } = await signInWithEmailAndPassword(auth, email.trim(), password);
-            console.log("Bienvenido:", user.uid);
-
-            navigation?.replace("Home", { uid: user.uid });
-
-        } catch (error) {
-            console.log(error.mesage);
-        }
+  const onLogin = async () => {
+    try {
+      if (!email || !password) return Alert.alert("Error", "Completa todos los campos");
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+    } catch (e) {
+      Alert.alert("No se pudo iniciar sesión", e.message);
+    }
   };
-         
 
-    return(
-         <View>
-
-            <Text>Email:</Text>
-                <TextInput onChangeText={setEmail} 
-                            value={email}
-                            autoCapitalize="none"
-                            keyboardType="email-address"
-                            style={{ borderWidth: 1, marginBottom: 10 }} />
-            
-            <Text>Contraseña:</Text>
-                <TextInput secureTextEntry
-                            value={password}
-                            onChangeText={setPassword} 
-                            style={{ borderWidth: 1, marginBottom: 10 }} />
-
-
-            <Button title="Iniciar sesión" onPress={handleSignIn} />
-
-         </View>
-    )
+  return (
+    <View style={{ padding: 16, gap: 12 }}>
+      <Text style={{ fontSize: 22, fontWeight: "bold" }}>Inicia sesión</Text>
+      <TextInput
+        placeholder="Email"
+        autoCapitalize="none"
+        keyboardType="email-address"
+        value={email}
+        onChangeText={setEmail}
+        style={{ borderWidth: 1, borderRadius: 8, padding: 10 }}
+      />
+      <TextInput
+        placeholder="Contraseña"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+        style={{ borderWidth: 1, borderRadius: 8, padding: 10 }}
+      />
+      <Button title="Entrar" onPress={onLogin} />
+      <TouchableOpacity onPress={() => navigation.navigate("Registro")}>
+        <Text style={{ textAlign: "center", marginTop: 12 }}>
+          ¿No tienes cuenta? <Text style={{ fontWeight: "bold" }}>Crear una</Text>
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
 }

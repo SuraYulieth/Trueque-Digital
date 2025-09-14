@@ -1,129 +1,56 @@
-import React, {useState} from "react";
-import { View, TextInput, Text, Button, StyleSheet } from "react-native"
-import { auth, db } from '../../firebaseConfig';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from "firebase/firestore";
+// src/Pantallas/RegistroUsuario.js
+import React, { useState } from "react";
+import { View, Text, TextInput, Button, Alert, TouchableOpacity } from "react-native";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { auth } from "../../firebaseConfig";
 
-export default function RegistroUsuario() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [nombre, setNombre] = useState("");
-    const [apellido, setApellido] = useState("");
-    const [pais, setPais] = useState("");
-    const [departamento, setDepartamento] = useState("");
-    const [ciudad, setCiudad] = useState("");
+export default function RegistroUsuario({ navigation }) {
+  const [email, setEmail] = useState("");
+  const [nombre, setNombre] = useState("");
+  const [password, setPassword] = useState("");
 
-    const handleRegister = async () => {
+  const onRegister = async () => {
+    try {
+      if (!email || !password || !nombre) return Alert.alert("Error", "Completa todos los campos");
+      const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      await updateProfile(cred.user, { displayName: nombre.trim() });
+      Alert.alert("¡Listo!", "Cuenta creada. Ya puedes iniciar sesión.");
+      navigation.navigate("Login");
+    } catch (e) {
+      Alert.alert("No se pudo registrar", e.message);
+    }
+  };
 
-        try{
-
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-
-            await setDoc ( doc ( db, "usuarios", user.uid ), {
-                uid: user.uid,
-                email: user.email,
-                nombre: nombre,
-                apellido: apellido,
-                pais: pais,
-                departamento: departamento,
-                ciudad: ciudad,
-                fechaCreacion: new Date()
-            });
-
-            console.log("Bienvenido a Trueque Digital, ", user);
-            
-        } catch (error) {
-            console.log(error.message);
-        }
-    };
-
-     
-    return(
-        <View style={{ padding: 20 }}>
-            <Text>Componente Creación de Usuario</Text>
-
-            <Text>Nombre:</Text>
-            <TextInput placeholder="Nombre" 
-                        value = {nombre}
-                        onChangeText={setNombre} 
-                        style={{borderWidth: 1, marginBottom: 10 }} />
-            
-            <Text>Apellidos:</Text>
-            <TextInput placeholder="Apellidos" 
-                        value = {apellido}
-                        onChangeText={setApellido} 
-                        style={{borderWidth: 1, marginBottom: 10 }} />
-            
-            <Text>Pais de residencia:</Text>
-            <TextInput placeholder="País de residencia" 
-                        value = {pais}
-                        onChangeText={setPais} 
-                        style={{borderWidth: 1, marginBottom: 10 }} />
-
-            <Text>Departamento o Estado:</Text>
-            <TextInput placeholder="Departamento o estado" 
-                        value = {departamento}
-                        onChangeText={setDepartamento} 
-                        style={{borderWidth: 1, marginBottom: 10 }} />
-
-            <Text>Ciudad:</Text>
-            <TextInput placeholder="Ciudad" 
-                        value = {ciudad}
-                        onChangeText={setCiudad} 
-                        style={{borderWidth: 1, marginBottom: 10 }} />
-
-            <Text>Email:</Text>
-            <TextInput placeholder="Correo electrónico"
-                        value = {email}
-                        onChangeText={setEmail} 
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        style={{ borderWidth: 1, marginBottom: 10 }} />
-
-            <Text>Contraseña:</Text>
-            <TextInput placeholder="Contraseña" 
-                        value = {password}
-                        secureTextEntry onChangeText={setPassword} 
-                        style={{borderWidth: 1, marginBottom: 10 }} />
-
-            
-            
-            <Button title="Registrarse" onPress={handleRegister} />
-            
-        </View>
-    )
+  return (
+    <View style={{ padding: 16, gap: 12 }}>
+      <Text style={{ fontSize: 22, fontWeight: "bold" }}>Crear cuenta</Text>
+      <TextInput
+        placeholder="Nombre"
+        value={nombre}
+        onChangeText={setNombre}
+        style={{ borderWidth: 1, borderRadius: 8, padding: 10 }}
+      />
+      <TextInput
+        placeholder="Email"
+        autoCapitalize="none"
+        keyboardType="email-address"
+        value={email}
+        onChangeText={setEmail}
+        style={{ borderWidth: 1, borderRadius: 8, padding: 10 }}
+      />
+      <TextInput
+        placeholder="Contraseña"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+        style={{ borderWidth: 1, borderRadius: 8, padding: 10 }}
+      />
+      <Button title="Registrarme" onPress={onRegister} />
+      <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+        <Text style={{ textAlign: "center", marginTop: 12 }}>
+          ¿Ya tienes cuenta? <Text style={{ fontWeight: "bold" }}>Inicia sesión</Text>
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 20,
-    backgroundColor: "#fff",
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
-    textAlign: "center",
-    fontWeight: "bold",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 15,
-  },
-  button: {
-    backgroundColor: "#4CAF50",
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-});
