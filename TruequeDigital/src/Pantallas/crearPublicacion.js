@@ -1,64 +1,51 @@
 // src/Pantallas/CrearPublicacion.js
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, Image, Alert } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import * as FileSystem from "expo-file-system";
-import { ref as storageRef, uploadString, getDownloadURL } from "firebase/storage";
+import { View, Text, TextInput, Button, Alert } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { auth, db, storage } from "../../firebaseConfig";
+import { auth, db } from "../../firebaseConfig";
+
 
 export default function CrearPublicacion({ navigation }) {
-  const [imagen, setImagen] = useState(null);
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
+  const [categoria, setCategoria] = useState("");
+  const [precio, setPrecio] = useState(""); 
   const [saving, setSaving] = useState(false);
 
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      return Alert.alert("Permisos", "Se requiere acceso a la galería para subir imágenes.");
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      allowsEditing: true,
-      quality: 0.85,
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    });
-    if (!result.canceled) {
-      setImagen(result.assets[0].uri);
-    }
-  };
-
-  const subirImagenYObtenerURL = async (uri) => {
-    const uid = auth.currentUser?.uid;
-    if (!uid) throw new Error("No hay usuario autenticado.");
-
-    // Lee archivo local como base64 (evita problemas con blob en Android)
-    const base64 = await FileSystem.readAsStringAsync(uri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-
-    const fileRef = storageRef(storage, `publicaciones/${uid}/${Date.now()}.jpg`);
-    const metadata = { contentType: "image/jpeg" };
-
-    // Subir como base64
-    await uploadString(fileRef, base64, "base64", metadata);
-    const url = await getDownloadURL(fileRef);
-    return url;
-  };
+  const CATEGORIAS = [
+    "Tecnología",
+    "Hogar",
+    "Servicios",
+    "Ropa",
+    "Libros",
+    "Otros",
+  ];
 
   const onGuardar = async () => {
     try {
-      if (!titulo.trim() || !descripcion.trim() || !imagen) {
-        return Alert.alert("Campos requeridos", "Agrega imagen, título y descripción.");
+      if (!auth.currentUser?.uid) {
+        return Alert.alert("Sesión", "Debes iniciar sesión para publicar.");
       }
+      const t = titulo.trim();
+      const d = descripcion.trim();
+      const c = categoria.trim();
+      const p = parseFloat(precio.toString().replace(",", "."));
+
+      if (!t || !d || !c || !precio) {
+        return Alert.alert("Campos requeridos", "Completa título, descripción, categoría y precio.");
+      }
+      if (Number.isNaN(p) || p < 0) {
+        return Alert.alert("Precio inválido", "Ingresa un precio válido (número positivo).");
+      }
+
       setSaving(true);
 
-      const imagenUrl = await subirImagenYObtenerURL(imagen);
-
       await addDoc(collection(db, "publicaciones"), {
-        titulo: titulo.trim(),
-        descripcion: descripcion.trim(),
-        imagenUrl,
+        titulo: t,
+        descripcion: d,
+        categoria: c,
+        precio: p, // número en Firestore
         userId: auth.currentUser.uid,
         createdAt: serverTimestamp(),
       });
@@ -66,7 +53,7 @@ export default function CrearPublicacion({ navigation }) {
       Alert.alert("Éxito", "Publicación creada.");
       navigation.goBack();
     } catch (e) {
-      console.log("Error al publicar:", e?.code, e?.message, e?.customData?.serverResponse);
+      console.log("Error al crear publicación:", e);
       Alert.alert("Error", e?.message || "No se pudo crear la publicación.");
     } finally {
       setSaving(false);
@@ -74,30 +61,69 @@ export default function CrearPublicacion({ navigation }) {
   };
 
   return (
-    <View style={{ padding: 16, gap: 12 }}>
-      <Text style={{ fontSize: 22, fontWeight: "bold" }}>Nueva publicación</Text>
+    <View style={{ flex: 1, padding: 16 }}>
+      <Text style={{ fontSize: 22, fontWeight: "bold", marginBottom: 12 }}>
+        Nueva publicación
+      </Text>
 
-      <Button title={imagen ? "Cambiar imagen" : "Cambiar imagen"} onPress={pickImage} />
-      {imagen && (
-        <Image source={{ uri: imagen }} style={{ width: "100%", height: 200, borderRadius: 12, marginTop: 8 }} />
-      )}
-
+      <Text style={{ marginBottom: 6 }}>Título</Text>
       <TextInput
-        placeholder="Título"
+        placeholder="Ej: Intercambio teclado mecánico"
         value={titulo}
         onChangeText={setTitulo}
-        style={{ borderWidth: 1, borderRadius: 8, padding: 10 }}
+        style={{ borderWidth: 1, borderRadius: 8, padding: 10, marginBottom: 12 }}
       />
+
+      <Text style={{ marginBottom: 6 }}>Descripción</Text>
       <TextInput
-        placeholder="Descripción"
+        placeholder="Describe el estado, condiciones del trueque, etc."
         value={descripcion}
         onChangeText={setDescripcion}
         multiline
         numberOfLines={4}
-        style={{ borderWidth: 1, borderRadius: 8, padding: 10, textAlignVertical: "top" }}
+        style={{
+          borderWidth: 1,
+          borderRadius: 8,
+          padding: 10,
+          textAlignVertical: "top",
+          marginBottom: 12,
+        }}
       />
 
-      <Button title={saving ? "Guardando..." : "Publicar"} onPress={onGuardar} disabled={saving} />
+      <Text style={{ marginBottom: 6 }}>Categoría</Text>
+      <View
+        style={{
+          borderWidth: 1,
+          borderRadius: 8,
+          marginBottom: 12,
+          overflow: "hidden",
+        }}
+      >
+        <Picker
+          selectedValue={categoria}
+          onValueChange={(val) => setCategoria(val)}
+        >
+          <Picker.Item label="Selecciona una categoría..." value="" />
+          {CATEGORIAS.map((cat) => (
+            <Picker.Item key={cat} label={cat} value={cat} />
+          ))}
+        </Picker>
+      </View>
+
+      <Text style={{ marginBottom: 6 }}>Precio</Text>
+      <TextInput
+        placeholder="Ej: 150000"
+        value={precio}
+        onChangeText={setPrecio}
+        keyboardType="numeric"
+        style={{ borderWidth: 1, borderRadius: 8, padding: 10, marginBottom: 16 }}
+      />
+
+      <Button
+        title={saving ? "Guardando..." : "Publicar"}
+        onPress={onGuardar}
+        disabled={saving}
+      />
     </View>
   );
 }

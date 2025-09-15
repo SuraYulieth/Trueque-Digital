@@ -45,6 +45,7 @@ export default function Home({ navigation }) {
         keyExtractor={(item) => item.id}
         ListEmptyComponent={<Text style={{ textAlign: "center", marginTop: 24 }}>No hay publicaciones aún.</Text>}
         renderItem={({ item }) => (
+          
           <TouchableOpacity style={{ borderWidth: 1, borderRadius: 12, padding: 10, marginBottom: 10 }}>
             {item.imagenUrl ? (
               <Image source={{ uri: item.imagenUrl }} style={{ width: "100%", height: 180, borderRadius: 8 }} />
@@ -52,6 +53,7 @@ export default function Home({ navigation }) {
             <Text style={{ fontSize: 18, fontWeight: "bold", marginTop: 8 }}>{item.titulo}</Text>
             <Text style={{ marginTop: 4 }}>{item.descripcion}</Text>
           </TouchableOpacity>
+          
         )}
       />
 
