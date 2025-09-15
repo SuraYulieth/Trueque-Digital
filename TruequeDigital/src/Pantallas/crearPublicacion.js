@@ -45,7 +45,7 @@ export default function CrearPublicacion({ navigation }) {
         titulo: t,
         descripcion: d,
         categoria: c,
-        precio: p, // número en Firestore
+        precio: p, 
         userId: auth.currentUser.uid,
         createdAt: serverTimestamp(),
       });

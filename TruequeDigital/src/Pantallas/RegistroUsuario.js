@@ -17,7 +17,7 @@ export default function RegistroUsuario() {
 
   const handleRegister = async () => {
     try {
-      // Validación estricta (todos requeridos)
+      
       if (!nombre.trim() || !apellido.trim() || !pais.trim() || !departamento.trim() || !ciudad.trim() || !email.trim() || !password) {
         return Alert.alert("Campos requeridos", "Debes completar todos los campos.");
       }
