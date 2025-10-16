@@ -10,6 +10,7 @@ import Home from "./src/Pantallas/Home";
 import LoginUsuario from "./src/Pantallas/LoginUsuario";
 import RegistroUsuario from "./src/Pantallas/RegistroUsuario";
 import CrearPublicacion from "./src/Pantallas/crearPublicacion";
+import MisSolicitudes from "./src/Pantallas/MisSolicitudes";
 
 const Stack = createNativeStackNavigator();
 
@@ -39,6 +40,12 @@ export default function App() {
         <Stack.Navigator>
           <Stack.Screen name="Home" component={Home} options={{ title: "Publicaciones" }} />
           <Stack.Screen name="CrearPublicacion" component={CrearPublicacion} options={{ title: "Nueva publicación" }} />
+          <Stack.Screen
+          name="MisSolicitudes"
+          component={MisSolicitudes}
+          options={{ title: "Mis solicitudes" }}
+        />
+
         </Stack.Navigator>
       ) : (
         <Stack.Navigator>
