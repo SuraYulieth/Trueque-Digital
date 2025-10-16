@@ -1,9 +1,9 @@
 // App.js
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import React, { useEffect, useState, useMemo } from "react";
+import { ActivityIndicator, View, Text } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { inMemoryPersistence, onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 import NetInfo from "@react-native-community/netinfo"
 import { Provider as PaperProvider } from "react-native-paper"
@@ -12,6 +12,8 @@ import LoginUsuario from "./src/Pantallas/LoginUsuario";
 import RegistroUsuario from "./src/Pantallas/RegistroUsuario";
 import CrearPublicacion from "./src/Pantallas/crearPublicacion";
 import { Button } from "react-native-paper";
+import { enableNetwork, disableNetwork } from 'firebase/firestore';
+import { db } from './firebaseConfig';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,22 +29,42 @@ export default function App() {
     return unsub;
   }, []);
 
-  const [isOnline, setIsonline] = useState(false);
-  const [forceOffline, setForceOffline] = useState(true);
+   // 1) Red real del dispositivo (solo NetInfo la toca)
+  const [networkOnline, setNetworkOnline] = useState(false);
+  // 2) Palanca del usuario (tu botón)
+  const [forceOffline, setForceOffline] = useState(false);
 
-  useEffect (() => {
-    const unsubscribe = NetInfo.addEventListener(state  => {
-      if (!forceOffline){
-        setIsonline(state.isConnected);
-      }
-    })
-    return unsubscribe;
+  // 3) Estado EFECTIVO para la UI
+  const effectiveOnline = useMemo(
+    () => !forceOffline && networkOnline,
+    [forceOffline, networkOnline]
+  );
+
+  // === NetInfo: solo actualiza "red real"
+  useEffect(() => {
+    const unsub = NetInfo.addEventListener(state => {
+      // Ojo: isInternetReachable puede ser null al inicio, así que tratamos null como "desconocido" => asumimos conectado solo si es true
+      const connected =
+        !!state.isConnected && (state.isInternetReachable !== false);
+      setNetworkOnline(connected);
+      // console.log('NetInfo says:', { connected, state });
+    });
+    return unsub;
+  }, []);
+
+  // === Forzar/soltar red de Firestore según palanca
+  useEffect(() => {
+    if (forceOffline) {
+      disableNetwork(db).catch(() => {});
+    } else {
+      enableNetwork(db).catch(() => {});
+    }
   }, [forceOffline]);
 
+  // === Botón: alterna SOLO la palanca
   const toggleOffline = () => {
-    setForceOffline(!forceOffline);
-    setIsonline(!forceOffline);
-  }
+    setForceOffline(prev => !prev);
+  };
   
   if (checking) {
     return (
@@ -54,14 +76,24 @@ export default function App() {
 
   return (
     <PaperProvider>
-      <view style={{ flex: 1 }}>
-        {!isOnline && (
-          <view style={{ backgroundColor: 'red', padding: 10 }}>
-            <Text style={{ color: "white", textAlign: 'center' }}>Modo Offline</Text>
-          </view>
+      <View style={{ flex: 1 }}>
+        {/* Banner: aparece si NO hay conexión efectiva */}
+        {!effectiveOnline && (
+          <View style={{ backgroundColor: 'red', padding: 10 }}>
+            <Text style={{ color: 'white', textAlign: 'center' }}>
+              Modo Offline
+            </Text>
+          </View>
         )}
-        <Button title={forceOffline ? 'Activar Online' : 'Activar Offline'} onPress={toggleOffline} />
-        <NavigationContainer>
+
+        <Button
+          mode="contained"
+          onPress={toggleOffline}
+          style={{ margin: 12 }}
+        >
+          {forceOffline ? 'Activar Online (quitar modo offline)' : 'Activar Offline'}
+        </Button>
+       <NavigationContainer>
           {user ? (
             <Stack.Navigator>
               <Stack.Screen name="Home" component={Home} options={{ title: "Publicaciones" }} />
@@ -74,7 +106,7 @@ export default function App() {
             </Stack.Navigator>
           )}
         </NavigationContainer>
-      </view>
+      </View>
     </PaperProvider>
   );
 }
