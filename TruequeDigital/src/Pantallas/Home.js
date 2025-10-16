@@ -11,11 +11,11 @@ export default function Home({ navigation }) {
 
   useEffect(() => {
     const q = query(collection(db, "publicaciones"), orderBy("createdAt", "desc"));
-    const unsub = onSnapshot(q, (snap) => {
+    const unsubscribe = onSnapshot(q, (snap) => {
       const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       setPublicaciones(items);
     });
-    return unsub;
+    return unsubscribe;
   }, []);
 
   const filtradas = useMemo(() => {

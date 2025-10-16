@@ -20,39 +20,31 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(true);
+  const [networkOnline, setNetworkOnline] = useState(false);
+  const [forceOffline, setForceOffline] = useState(false);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u || null);
       setChecking(false);
     });
-    return unsub;
+    return unsubscribe;
   }, []);
 
-   // 1) Red real del dispositivo (solo NetInfo la toca)
-  const [networkOnline, setNetworkOnline] = useState(false);
-  // 2) Palanca del usuario (tu botón)
-  const [forceOffline, setForceOffline] = useState(false);
-
-  // 3) Estado EFECTIVO para la UI
   const effectiveOnline = useMemo(
     () => !forceOffline && networkOnline,
     [forceOffline, networkOnline]
   );
 
-  // === NetInfo: solo actualiza "red real"
   useEffect(() => {
-    const unsub = NetInfo.addEventListener(state => {
-      // Ojo: isInternetReachable puede ser null al inicio, así que tratamos null como "desconocido" => asumimos conectado solo si es true
+    const unsubscribe = NetInfo.addEventListener(state => {
       const connected =
         !!state.isConnected && (state.isInternetReachable !== false);
       setNetworkOnline(connected);
-      // console.log('NetInfo says:', { connected, state });
     });
-    return unsub;
+    return unsubscribe;
   }, []);
 
-  // === Forzar/soltar red de Firestore según palanca
   useEffect(() => {
     if (forceOffline) {
       disableNetwork(db).catch(() => {});
@@ -61,7 +53,6 @@ export default function App() {
     }
   }, [forceOffline]);
 
-  // === Botón: alterna SOLO la palanca
   const toggleOffline = () => {
     setForceOffline(prev => !prev);
   };
@@ -77,7 +68,6 @@ export default function App() {
   return (
     <PaperProvider>
       <View style={{ flex: 1 }}>
-        {/* Banner: aparece si NO hay conexión efectiva */}
         {!effectiveOnline && (
           <View style={{ backgroundColor: 'red', padding: 10 }}>
             <Text style={{ color: 'white', textAlign: 'center' }}>

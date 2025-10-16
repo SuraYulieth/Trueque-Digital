@@ -4,7 +4,6 @@ import { Picker } from "@react-native-picker/picker";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../../firebaseConfig";
 
-
 export default function CrearPublicacion({ navigation }) {
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
@@ -57,6 +56,9 @@ export default function CrearPublicacion({ navigation }) {
     } finally {
       setSaving(false);
     }
+
+
+
   };
 
   return (
@@ -90,18 +92,9 @@ export default function CrearPublicacion({ navigation }) {
       />
 
       <Text style={{ marginBottom: 6 }}>Categoría</Text>
-      <View
-        style={{
-          borderWidth: 1,
-          borderRadius: 8,
-          marginBottom: 12,
-          overflow: "hidden",
-        }}
-      >
-        <Picker
-          selectedValue={categoria}
-          onValueChange={(val) => setCategoria(val)}
-        >
+      
+      <View style={{borderWidth: 1, borderRadius: 8, marginBottom: 12, overflow: "hidden",}}>
+        <Picker selectedValue={categoria} onValueChange={(val) => setCategoria(val)}>
           <Picker.Item label="Selecciona una categoría..." value="" />
           {CATEGORIAS.map((cat) => (
             <Picker.Item key={cat} label={cat} value={cat} />
