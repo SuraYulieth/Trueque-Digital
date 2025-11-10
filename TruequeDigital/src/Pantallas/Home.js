@@ -63,7 +63,7 @@ export default function Home({ navigation }) {
       });
 
       if (found) {
-        navigation.navigate('ChatRoom', { chatId: found.id });
+        navigation.navigate('ChatRoom', { chatId: found.id, participants: found.participants || [] });
         return;
       }
 
@@ -75,9 +75,10 @@ export default function Home({ navigation }) {
         lastMessage: '',
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp(),
+        createdBy: myId,
       });
 
-      navigation.navigate('ChatRoom', { chatId: docRef.id });
+      navigation.navigate('ChatRoom', { chatId: docRef.id, participants: [myId, otherId] });
     } catch (e) {
       console.error('openOrCreateChat error', e);
       Alert.alert('Error', e?.message || 'No se pudo iniciar el chat.');
@@ -115,6 +116,7 @@ export default function Home({ navigation }) {
             lastMessage: '',
             updatedAt: serverTimestamp(),
             createdAt: serverTimestamp(),
+            createdBy: uid,
           });
           chatId = docRef.id;
         } catch (e) {
@@ -128,8 +130,9 @@ export default function Home({ navigation }) {
         publicacionCategoria: pubSeleccionada.categoria || "",
         publicacionPrecio: typeof pubSeleccionada.precio === "number" ? pubSeleccionada.precio : null,
 
-        ofertanteId: uid,
-        destinatarioId: pubSeleccionada.userId,
+  ofertanteId: uid,
+  destinatarioId: pubSeleccionada.userId,
+  participants: [uid, pubSeleccionada.userId],
         propuesta: ofertaTexto,
         estado: "pendiente",
         chatId: chatId || null,
@@ -149,7 +152,8 @@ export default function Home({ navigation }) {
           {
             text: 'Ir al chat',
             onPress: () => {
-              if (chatId) navigation.navigate('ChatRoom', { chatId });
+              const participants = [uid, pubSeleccionada.userId];
+              if (chatId) navigation.navigate('ChatRoom', { chatId, participants });
               else openOrCreateChat(pubSeleccionada.userId, pubSeleccionada.userName || pubSeleccionada.userDisplayName || 'Usuario');
             }
           },
