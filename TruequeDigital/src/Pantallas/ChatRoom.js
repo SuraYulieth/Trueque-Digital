@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     minHeight: 40,
-    color: '#fff',
+    color: '#000',
     paddingHorizontal: 10,
   },
   sendButton: {
