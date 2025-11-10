@@ -79,17 +79,31 @@ export default function Home({ navigation }) {
 
   return (
     <View style={{ flex: 1, padding: 12 }}>
-      <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
-        <View style={{ flex: 1 }}>
-          <TextInput
-            placeholder="Buscar por palabra clave..."
-            value={busqueda}
-            onChangeText={setBusqueda}
-            style={{ borderWidth: 1, borderRadius: 8, padding: 10 }}
-          />
-        </View>
-        <Button title="Nuevo" onPress={() => navigation.navigate("CrearPublicacion")} />
-        <Button title="Mis Solicitudes" onPress={() => navigation.navigate("MisSolicitudes")} />
+      {/* Search on its own row for better spacing */}
+      <View style={{ marginBottom: 10 }}>
+        <TextInput
+          placeholder="Buscar por palabra clave..."
+          value={busqueda}
+          onChangeText={setBusqueda}
+          style={{ borderWidth: 1, borderRadius: 8, padding: 10, backgroundColor: '#fff' }}
+        />
+      </View>
+
+      {/* Action buttons row below the search */}
+      <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('CrearPublicacion')}
+          style={{ flex: 1, backgroundColor: '#007AFF', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '600' }}>Nuevo</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate('MisSolicitudes')}
+          style={{ flex: 1, backgroundColor: '#007AFF', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '600' }}>Mis Solicitudes</Text>
+        </TouchableOpacity>
       </View>
 
       <FlatList
