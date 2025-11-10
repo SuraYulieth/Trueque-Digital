@@ -15,6 +15,8 @@ import { Button } from "react-native-paper";
 import { enableNetwork, disableNetwork } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 import MisSolicitudes from "./src/Pantallas/MisSolicitudes";
+import MisChats from "./src/Pantallas/MisChats";
+import ChatRoom from "./src/Pantallas/ChatRoom";
 
 const Stack = createNativeStackNavigator();
 
@@ -90,6 +92,8 @@ export default function App() {
               <Stack.Screen name="Home" component={Home} options={{ title: "Publicaciones" }} />
               <Stack.Screen name="CrearPublicacion" component={CrearPublicacion} options={{ title: "Nueva publicación" }} />
               <Stack.Screen name="MisSolicitudes" component={MisSolicitudes} options={{ title: "Mis solicitudes" }} />
+              <Stack.Screen name="MisChats" component={MisChats} options={{ title: "Mis chats" }} />
+              <Stack.Screen name="ChatRoom" component={ChatRoom} options={{ title: "Chat" }} />
             </Stack.Navigator>
           ) : (
             <Stack.Navigator>

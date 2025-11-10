@@ -149,14 +149,14 @@ export default function ChatRoom({ route, navigation }) {
           <TextInput
             ref={textInputRef}
             placeholder="Escribe un mensaje"
-            placeholderTextColor="#999"
+            placeholderTextColor="#000000ff"
             value={messageContent}
             onChangeText={setMessageContent}
             style={styles.input}
             multiline
           />
           <Pressable onPress={handleSendMessage} style={styles.sendButton}>
-            <Text style={{ color: messageContent.trim() ? '#fff' : '#bbb' }}>Enviar</Text>
+            <Text style={{ color: messageContent.trim() ? '#000000ff' : '#bbb' }}>Enviar</Text>
           </Pressable>
         </View>
       </KeyboardAvoidingView>
