@@ -10,6 +10,7 @@ export default function Home({ navigation }) {
   const [publicaciones, setPublicaciones] = useState([]);
   const [busqueda, setBusqueda] = useState("");
 
+  // Modal
   const [modalVisible, setModalVisible] = useState(false);
   const [pubSeleccionada, setPubSeleccionada] = useState(null);
   const [enviando, setEnviando] = useState(false);
@@ -32,12 +33,56 @@ export default function Home({ navigation }) {
     );
   }, [busqueda, publicaciones]);
 
+  // Abrir modal (evita solicitar tu propia publicación)
   const abrirModal = (pub) => {
     if (pub.userId === auth.currentUser?.uid) {
       return Alert.alert("No permitido", "No puedes solicitar tu propia publicación.");
     }
     setPubSeleccionada(pub);
     setModalVisible(true);
+  };
+
+  // Abrir o crear un chat 1:1 entre el usuario actual y otherId
+  const openOrCreateChat = async (otherId, otherName = 'Usuario') => {
+    try {
+      const myId = auth.currentUser?.uid;
+      if (!myId) return Alert.alert('Error', 'No has iniciado sesión.');
+      if (otherId === myId) return Alert.alert('Info', 'No puedes chatear contigo mismo.');
+
+      // buscar chats donde yo soy participante
+      const q = query(collection(db, 'chats'), where('participants', 'array-contains', myId));
+      const snap = await getDocs(q);
+      let found = null;
+      snap.forEach((d) => {
+        const data = d.data();
+        const parts = data.participants || [];
+        // si el chat contiene al otro usuario
+        if (parts.includes(otherId) && parts.length === 2) {
+          found = { id: d.id, ...data };
+        }
+      });
+
+      if (found) {
+        navigation.navigate('ChatRoom', { chatId: found.id, participants: found.participants || [] });
+        return;
+      }
+
+      // crear nuevo chat 1:1
+      const myName = auth.currentUser?.displayName || auth.currentUser?.email || 'Usuario';
+      const docRef = await addDoc(collection(db, 'chats'), {
+        participants: [myId, otherId],
+        participantNames: { [myId]: myName, [otherId]: otherName },
+        lastMessage: '',
+        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp(),
+        createdBy: myId,
+      });
+
+      navigation.navigate('ChatRoom', { chatId: docRef.id, participants: [myId, otherId] });
+    } catch (e) {
+      console.error('openOrCreateChat error', e);
+      Alert.alert('Error', e?.message || 'No se pudo iniciar el chat.');
+    }
   };
 
   // Crear doc en 'solicitudes'
@@ -126,17 +171,38 @@ export default function Home({ navigation }) {
 
   return (
     <View style={{ flex: 1, padding: 12 }}>
-      <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
-        <View style={{ flex: 1 }}>
-          <TextInput
-            placeholder="Buscar por palabra clave..."
-            value={busqueda}
-            onChangeText={setBusqueda}
-            style={{ borderWidth: 1, borderRadius: 8, padding: 10 }}
-          />
-        </View>
-        <Button title="Nuevo" onPress={() => navigation.navigate("CrearPublicacion")} />
-        <Button title="Mis Solicitudes" onPress={() => navigation.navigate("MisSolicitudes")} />
+      {/* Search on its own row for better spacing */}
+      <View style={{ marginBottom: 10 }}>
+        <TextInput
+          placeholder="Buscar por palabra clave..."
+          value={busqueda}
+          onChangeText={setBusqueda}
+          style={{ borderWidth: 1, borderRadius: 8, padding: 10, backgroundColor: '#fff' }}
+        />
+      </View>
+
+      {/* Action buttons row below the search */}
+      <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('CrearPublicacion')}
+            style={{ flex: 1, backgroundColor: '#007AFF', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
+          >
+            <Text style={{ color: '#fff', fontWeight: '600' }}>Nuevo</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('MisChats')}
+            style={{ flex: 1, backgroundColor: '#007AFF', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
+          >
+            <Text style={{ color: '#fff', fontWeight: '600' }}>Chats</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('MisSolicitudes')}
+            style={{ flex: 1, backgroundColor: '#007AFF', paddingVertical: 12, borderRadius: 8, alignItems: 'center' }}
+          >
+            <Text style={{ color: '#fff', fontWeight: '600' }}>Mis Solicitudes</Text>
+          </TouchableOpacity>
       </View>
 
       <FlatList
@@ -153,19 +219,11 @@ export default function Home({ navigation }) {
 
             {/* Botón para abrir el modal */}
             <View style={{ marginTop: 8 }}>
-              <TouchableOpacity
+              <Button
+                title={isOwner(item) ? "Es tu publicación" : "Solicitar intercambio"}
                 onPress={() => abrirModal(item)}
                 disabled={isOwner(item)}
-                style={{
-                  height: 38,
-                  borderRadius: 8,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: isOwner(item) ? '#ccc' : '#007AFF'
-                }}
-              >
-                <Text style={{ color: isOwner(item) ? '#666' : '#fff', fontWeight: '600' }}>{isOwner(item) ? 'Es tu publicación' : 'Solicitar intercambio'}</Text>
-              </TouchableOpacity>
+              />
             </View>
             {/* Botón para chatear con el dueño de la publicación */}
             {!isOwner(item) && (
@@ -183,12 +241,7 @@ export default function Home({ navigation }) {
       />
 
       <View style={{ marginTop: 8 }}>
-        <TouchableOpacity
-          onPress={() => signOut(auth)}
-          style={{ height: 44, borderRadius: 8, backgroundColor: '#007AFF', justifyContent: 'center', alignItems: 'center' }}
-        >
-          <Text style={{ color: '#fff', fontWeight: '600' }}>Cerrar sesión</Text>
-        </TouchableOpacity>
+        <Button title="Cerrar sesión" onPress={() => signOut(auth)} />
       </View>
 
       {/* Modal */}
