@@ -3,6 +3,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { ActivityIndicator, View, Text } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 import NetInfo from "@react-native-community/netinfo"
@@ -15,6 +16,8 @@ import { Button } from "react-native-paper";
 import { enableNetwork, disableNetwork } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 import MisSolicitudes from "./src/Pantallas/MisSolicitudes";
+import Chat from "./src/Pantallas/Chat"
+import MisChats from "./src/Pantallas/MisChats";
 
 const Stack = createNativeStackNavigator();
 
@@ -24,9 +27,10 @@ export default function App() {
   const [networkOnline, setNetworkOnline] = useState(false);
   const [forceOffline, setForceOffline] = useState(false);
 
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      setUser(u || null);
+    const unsubscribe = onAuthStateChanged( auth, (u) => {
+      setUser( u || null );
       setChecking(false);
     });
     return unsubscribe;
@@ -67,6 +71,7 @@ export default function App() {
   }
 
   return (
+    
     <PaperProvider>
       <View style={{ flex: 1 }}>
         {!effectiveOnline && (
@@ -90,6 +95,8 @@ export default function App() {
               <Stack.Screen name="Home" component={Home} options={{ title: "Publicaciones" }} />
               <Stack.Screen name="CrearPublicacion" component={CrearPublicacion} options={{ title: "Nueva publicación" }} />
               <Stack.Screen name="MisSolicitudes" component={MisSolicitudes} options={{ title: "Mis solicitudes" }} />
+              <Stack.Screen name="MisChats" component={MisChats} options={{ title: "Mis chats" }} />
+              <Stack.Screen name="Chat" component={Chat} options={{ title: "Chat" }} />
             </Stack.Navigator>
           ) : (
             <Stack.Navigator>
@@ -100,5 +107,6 @@ export default function App() {
         </NavigationContainer>
       </View>
     </PaperProvider>
+ 
   );
 }

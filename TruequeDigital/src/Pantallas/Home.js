@@ -1,6 +1,6 @@
 // src/Pantallas/Home.js
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Text, FlatList, Image, TextInput, Button, TouchableOpacity, Alert } from "react-native";
+import { View, Text, FlatList, Image, TextInput, TouchableOpacity, Alert } from "react-native";
 import { collection, onSnapshot, orderBy, query, addDoc, serverTimestamp } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { db, auth } from "../../firebaseConfig";
@@ -10,7 +10,6 @@ export default function Home({ navigation }) {
   const [publicaciones, setPublicaciones] = useState([]);
   const [busqueda, setBusqueda] = useState("");
 
-  // Modal
   const [modalVisible, setModalVisible] = useState(false);
   const [pubSeleccionada, setPubSeleccionada] = useState(null);
   const [enviando, setEnviando] = useState(false);
@@ -33,7 +32,6 @@ export default function Home({ navigation }) {
     );
   }, [busqueda, publicaciones]);
 
-  // Abrir modal (evita solicitar tu propia publicación)
   const abrirModal = (pub) => {
     if (pub.userId === auth.currentUser?.uid) {
       return Alert.alert("No permitido", "No puedes solicitar tu propia publicación.");
@@ -41,8 +39,7 @@ export default function Home({ navigation }) {
     setPubSeleccionada(pub);
     setModalVisible(true);
   };
-
-  // Crear doc en 'solicitudes'
+  
   const enviarSolicitud = async (ofertaTexto, done) => {
     try {
       const uid = auth.currentUser?.uid;
@@ -79,17 +76,37 @@ export default function Home({ navigation }) {
 
   return (
     <View style={{ flex: 1, padding: 12 }}>
-      <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
-        <View style={{ flex: 1 }}>
-          <TextInput
-            placeholder="Buscar por palabra clave..."
-            value={busqueda}
-            onChangeText={setBusqueda}
-            style={{ borderWidth: 1, borderRadius: 8, padding: 10 }}
-          />
-        </View>
-        <Button title="Nuevo" onPress={() => navigation.navigate("CrearPublicacion")} />
-        <Button title="Mis Solicitudes" onPress={() => navigation.navigate("MisSolicitudes")} />
+      {/* Search on its own row for better layout */}
+      <View style={{ marginBottom: 8 }}>
+        <TextInput
+          placeholder="Buscar por palabra clave..."
+          value={busqueda}
+          onChangeText={setBusqueda}
+          style={{ borderWidth: 1, borderRadius: 8, padding: 10, width: '100%' }}
+        />
+      </View>
+
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('CrearPublicacion')}
+          style={{ flex: 1, marginRight: 8, height: 44, backgroundColor: '#007AFF', borderRadius: 8, justifyContent: 'center', alignItems: 'center' }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '600' }}>Nuevo</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate('MisSolicitudes')}
+          style={{ flex: 1, marginRight: 8, height: 44, backgroundColor: '#007AFF', borderRadius: 8, justifyContent: 'center', alignItems: 'center' }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '600' }}>Mis Solicitudes</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate('MisChats')}
+          style={{ flex: 1, height: 44, backgroundColor: '#007AFF', borderRadius: 8, justifyContent: 'center', alignItems: 'center' }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '600' }}>Chats</Text>
+        </TouchableOpacity>
       </View>
 
       <FlatList
@@ -106,18 +123,31 @@ export default function Home({ navigation }) {
 
             {/* Botón para abrir el modal */}
             <View style={{ marginTop: 8 }}>
-              <Button
-                title={isOwner(item) ? "Es tu publicación" : "Solicitar intercambio"}
+              <TouchableOpacity
                 onPress={() => abrirModal(item)}
                 disabled={isOwner(item)}
-              />
+                style={{
+                  height: 38,
+                  borderRadius: 8,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: isOwner(item) ? '#ccc' : '#007AFF'
+                }}
+              >
+                <Text style={{ color: isOwner(item) ? '#666' : '#fff', fontWeight: '600' }}>{isOwner(item) ? 'Es tu publicación' : 'Solicitar intercambio'}</Text>
+              </TouchableOpacity>
             </View>
           </TouchableOpacity>
         )}
       />
 
       <View style={{ marginTop: 8 }}>
-        <Button title="Cerrar sesión" onPress={() => signOut(auth)} />
+        <TouchableOpacity
+          onPress={() => signOut(auth)}
+          style={{ height: 44, borderRadius: 8, backgroundColor: '#007AFF', justifyContent: 'center', alignItems: 'center' }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '600' }}>Cerrar sesión</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Modal */}
