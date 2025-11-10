@@ -4,7 +4,7 @@ import { View, Text, Button, TouchableOpacity, FlatList, Alert } from "react-nat
 import { auth, db } from "../../firebaseConfig";
 import {collection, onSnapshot, orderBy,query, updateDoc, doc, where, serverTimestamp,} from "firebase/firestore";
 
-export default function MisSolicitudes() {
+export default function MisSolicitudes( { navigation } ) {
   const uid = auth.currentUser?.uid;
   const [tab, setTab] = useState("recibidas"); // "recibidas" | "enviadas"
   const [solicitudes, setSolicitudes] = useState([]);
@@ -25,7 +25,11 @@ export default function MisSolicitudes() {
   const actualizarEstado = async (s, estado) => {
     try {
       await updateDoc(doc(db, "solicitudes", s.id), { estado, updatedAt: serverTimestamp() });
+      console.log("Solicitud actualizada:", s);
       Alert.alert("Listo", `Solicitud ${estado}.`);
+      if ( s.destinatarioId === uid) {
+        navigation.navigate("ChatRoom", { chatId: s.id });
+      }
     } catch (e) {
       Alert.alert("Error", e?.message || "No se pudo actualizar la solicitud.");
     }

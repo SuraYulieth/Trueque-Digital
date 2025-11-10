@@ -110,6 +110,12 @@ export default function Home({ navigation }) {
       setModalVisible(false);
       setPubSeleccionada(null);
       Alert.alert("Solicitud enviada", "El dueño recibirá tu propuesta.");
+      // Crear o abrir chat 1:1 con el dueño cuando se envía la solicitud
+      try {
+        await openOrCreateChat(pubSeleccionada.userId, pubSeleccionada.userName || pubSeleccionada.userDisplayName || 'Usuario');
+      } catch (e) {
+        console.warn('No se pudo crear/abrir chat tras enviar solicitud', e);
+      }
     } catch (e) {
       Alert.alert("Error", e?.message || "No se pudo enviar la solicitud.");
     } finally {

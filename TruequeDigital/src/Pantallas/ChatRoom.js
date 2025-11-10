@@ -22,6 +22,7 @@ import {
   doc,
   getDoc,
   updateDoc,
+  setDoc,
 } from 'firebase/firestore';
 import { db, auth } from '../../firebaseConfig';
 
@@ -96,10 +97,25 @@ export default function ChatRoom({ route, navigation }) {
       setMessageContent('');
       // update chat metadata
       const chatRef = doc(db, 'chats', chatId);
-      await updateDoc(chatRef, {
-        lastMessage: msg.content,
-        updatedAt: serverTimestamp(),
-      });
+      try {
+        await updateDoc(chatRef, {
+          lastMessage: msg.content,
+          updatedAt: serverTimestamp(),
+        });
+      } catch (uErr) {
+        // If the chat document does not exist, create it (merge to avoid overwriting if partially present)
+        console.warn('updateDoc failed, creating chat doc instead', uErr);
+        try {
+          await setDoc(chatRef, {
+            lastMessage: msg.content,
+            updatedAt: serverTimestamp(),
+            createdAt: serverTimestamp(),
+            participants: msg.senderId ? [msg.senderId] : [],
+          }, { merge: true });
+        } catch (cErr) {
+          console.error('failed to create chat doc after update failure', cErr);
+        }
+      }
       // scroll to bottom
       setTimeout(() => {
         listRef.current?.scrollToEnd?.({ animated: true });
