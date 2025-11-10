@@ -6,7 +6,7 @@ import { signOut } from "firebase/auth";
 import { db, auth } from "../../firebaseConfig";
 import SolicitarIntercambioModal from "./SolicitarIntercambioModal";
 
-export default function Home({ navigation }) {
+export default function Home({ navigation, effectiveOnline = true, forceOffline = false, toggleOffline = () => {} }) {
   const [publicaciones, setPublicaciones] = useState([]);
   const [busqueda, setBusqueda] = useState("");
 
@@ -79,6 +79,20 @@ export default function Home({ navigation }) {
 
   return (
     <View style={{ flex: 1, padding: 12 }}>
+      {/* Offline banner + toggle (safe fallback without react-native-paper) */}
+      {!effectiveOnline && (
+        <View style={{ backgroundColor: 'red', padding: 10, borderRadius: 6, marginBottom: 8 }}>
+          <Text style={{ color: 'white', textAlign: 'center' }}>Modo Offline</Text>
+        </View>
+      )}
+
+      <TouchableOpacity
+        onPress={toggleOffline}
+        style={{ margin: 12, backgroundColor: '#007AFF', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 12, alignItems: 'center' }}
+      >
+        <Text style={{ color: '#fff', fontWeight: '600' }}>{forceOffline ? 'Activar Online (quitar modo offline)' : 'Activar Offline'}</Text>
+      </TouchableOpacity>
+
       <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
         <View style={{ flex: 1 }}>
           <TextInput
