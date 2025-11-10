@@ -16,6 +16,8 @@ import { Button } from "react-native-paper";
 import { enableNetwork, disableNetwork } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 import MisSolicitudes from "./src/Pantallas/MisSolicitudes";
+import MisChats from "./src/Pantallas/MisChats";
+import ChatRoom from "./src/Pantallas/ChatRoom";
 
 const Stack = createNativeStackNavigator();
 
