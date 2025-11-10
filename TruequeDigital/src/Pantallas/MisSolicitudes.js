@@ -28,7 +28,8 @@ export default function MisSolicitudes( { navigation } ) {
       console.log("Solicitud actualizada:", s);
       Alert.alert("Listo", `Solicitud ${estado}.`);
       if ( s.destinatarioId === uid) {
-        navigation.navigate("ChatRoom", { chatId: s.id });
+
+        navigation.navigate("ChatRoom", { chatId: s.id, ofertanteId : s.ofertanteId });
       }
     } catch (e) {
       Alert.alert("Error", e?.message || "No se pudo actualizar la solicitud.");

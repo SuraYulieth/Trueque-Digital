@@ -90,6 +90,37 @@ export default function Home({ navigation }) {
       const uid = auth.currentUser?.uid;
       if (!uid || !pubSeleccionada) return;
       setEnviando(true);
+      // Ensure there is a 1:1 chat for these participants and get its id
+      let chatId = null;
+      try {
+        const q = query(collection(db, 'chats'), where('participants', 'array-contains', uid));
+        const snap = await getDocs(q);
+        snap.forEach((d) => {
+          const data = d.data();
+          const parts = data.participants || [];
+          if (parts.includes(pubSeleccionada.userId) && parts.length === 2) {
+            chatId = d.id;
+          }
+        });
+      } catch (e) {
+        console.warn('buscar chat existente falló', e);
+      }
+
+      if (!chatId) {
+        try {
+          const myName = auth.currentUser?.displayName || auth.currentUser?.email || 'Usuario';
+          const docRef = await addDoc(collection(db, 'chats'), {
+            participants: [uid, pubSeleccionada.userId],
+            participantNames: { [uid]: myName, [pubSeleccionada.userId]: pubSeleccionada.userName || pubSeleccionada.userDisplayName || '' },
+            lastMessage: '',
+            updatedAt: serverTimestamp(),
+            createdAt: serverTimestamp(),
+          });
+          chatId = docRef.id;
+        } catch (e) {
+          console.warn('crear chat falló', e);
+        }
+      }
 
       await addDoc(collection(db, "solicitudes"), {
         publicacionId: pubSeleccionada.id,
@@ -101,6 +132,7 @@ export default function Home({ navigation }) {
         destinatarioId: pubSeleccionada.userId,
         propuesta: ofertaTexto,
         estado: "pendiente",
+        chatId: chatId || null,
 
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -109,13 +141,21 @@ export default function Home({ navigation }) {
       done?.();
       setModalVisible(false);
       setPubSeleccionada(null);
-      Alert.alert("Solicitud enviada", "El dueño recibirá tu propuesta.");
-      // Crear o abrir chat 1:1 con el dueño cuando se envía la solicitud
-      try {
-        await openOrCreateChat(pubSeleccionada.userId, pubSeleccionada.userName || pubSeleccionada.userDisplayName || 'Usuario');
-      } catch (e) {
-        console.warn('No se pudo crear/abrir chat tras enviar solicitud', e);
-      }
+      // Preguntar al usuario si quiere abrir el chat con el dueño
+      Alert.alert(
+        "Solicitud enviada",
+        "El dueño recibirá tu propuesta. ¿Quieres ir al chat ahora?",
+        [
+          {
+            text: 'Ir al chat',
+            onPress: () => {
+              if (chatId) navigation.navigate('ChatRoom', { chatId });
+              else openOrCreateChat(pubSeleccionada.userId, pubSeleccionada.userName || pubSeleccionada.userDisplayName || 'Usuario');
+            }
+          },
+          { text: 'Cerrar', style: 'cancel' }
+        ]
+      );
     } catch (e) {
       Alert.alert("Error", e?.message || "No se pudo enviar la solicitud.");
     } finally {

@@ -28,6 +28,7 @@ import { db, auth } from '../../firebaseConfig';
 
 export default function ChatRoom({ route, navigation }) {
   const chatId = route?.params?.chatId;
+  const ofertanteId = route?.params?.ofertanteId;
   const [messageContent, setMessageContent] = useState('');
   const [chatRoom, setChatRoom] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -41,8 +42,26 @@ export default function ChatRoom({ route, navigation }) {
 
     async function firstLoad() {
       try {
-        const chatDoc = await getDoc(doc(db, 'chats', chatId));
-        setChatRoom(chatDoc.exists() ? { id: chatDoc.id, ...chatDoc.data() } : null);
+        const chatRef = doc(db, 'chats', chatId);
+        const chatDoc = await getDoc(chatRef);
+        if (!chatDoc.exists()) {
+          // create a minimal chat document so updates later won't fail
+          try {
+            await setDoc(chatRef, {
+              participants: [],
+              lastMessage: '',
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+            }, { merge: true });
+          } catch (cErr) {
+            console.warn('Could not create missing chat doc on firstLoad', cErr);
+          }
+          // re-read after attempt to create
+          const re = await getDoc(chatRef);
+          setChatRoom(re.exists() ? { id: re.id, ...re.data() } : null);
+        } else {
+          setChatRoom({ id: chatDoc.id, ...chatDoc.data() });
+        }
 
         const messagesQuery = query(
           collection(db, 'chats', chatId, 'messages'),
