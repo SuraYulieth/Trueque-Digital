@@ -3,7 +3,6 @@ import React, { useEffect, useState, useMemo } from "react";
 import { ActivityIndicator, View, Text } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebaseConfig";
 import NetInfo from "@react-native-community/netinfo"
@@ -27,10 +26,9 @@ export default function App() {
   const [networkOnline, setNetworkOnline] = useState(false);
   const [forceOffline, setForceOffline] = useState(false);
 
-
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged( auth, (u) => {
-      setUser( u || null );
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u || null);
       setChecking(false);
     });
     return unsubscribe;
@@ -71,7 +69,6 @@ export default function App() {
   }
 
   return (
-    
     <PaperProvider>
       <View style={{ flex: 1 }}>
         {!effectiveOnline && (
@@ -95,6 +92,8 @@ export default function App() {
               <Stack.Screen name="Home" component={Home} options={{ title: "Publicaciones" }} />
               <Stack.Screen name="CrearPublicacion" component={CrearPublicacion} options={{ title: "Nueva publicación" }} />
               <Stack.Screen name="MisSolicitudes" component={MisSolicitudes} options={{ title: "Mis solicitudes" }} />
+              <Stack.Screen name="MisChats" component={MisChats} options={{ title: "Mis chats" }} />
+              <Stack.Screen name="ChatRoom" component={ChatRoom} options={{ title: "Chat" }} />
             </Stack.Navigator>
           ) : (
             <Stack.Navigator>
@@ -105,6 +104,5 @@ export default function App() {
         </NavigationContainer>
       </View>
     </PaperProvider>
- 
   );
 }
