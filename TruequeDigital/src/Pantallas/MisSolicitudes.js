@@ -103,6 +103,17 @@ export default function MisSolicitudes( { navigation } ) {
             <Button title="Cancelar" onPress={() => actualizarEstado(s, "cancelada")} />
           ) : null}
         </View>
+          { s.estado === "aceptada" && (
+          <Button
+          title="Calificar usuario"
+          onPress={() =>
+          navigation.navigate("CalificarUsuario", {
+          evaluadoId: tab === "recibidas" ? s.ofertanteId : s.destinatarioId,
+          solicitudId: s.id,
+            })
+          }/>
+)}
+
       </View>
     );
   };
